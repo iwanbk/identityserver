@@ -384,11 +384,49 @@
                         </md-tab-body>
                     </md-tab>
 
-                    <!--<md-tab>-->
-                    <!--<md-tab-label><i class="fa fa-file-text-o"></i>&nbsp;Contracts</md-tab-label>-->
-                    <!--<md-tab-body>-->
-                    <!--</md-tab-body>-->
-                    <!--</md-tab>-->
+                    <md-tab md-on-select="vm.tabSelected(vm.loadContracts)">
+                        <md-tab-label><i class="fa fa-file-text-o"></i>&nbsp;Contracts</md-tab-label>
+                        <md-tab-body>
+                            <div flex="100" flex-gt-sm="80" flex-gt-md="40" flex-gt-lg="30">
+                                <div ng-if="vm.contractPage === vm.CONTRACT_PAGE_DETAIL">
+                                    <md-button class="md-primary" ng-click="vm.showContractOverview()">
+                                        <i class="fa fa-arrow-left"></i> Back to overview
+                                    </md-button>
+                                    <contract-detail contract="vm.contract" contracts="vm.contracts"
+                                                     contract-source-type="'user'"
+                                                     contract-source="vm.user.username">
+                                    </contract-detail>
+                                </div>
+                                <div ng-if="vm.contractPage === vm.CONTRACT_PAGE_ACK">
+                                    <md-button class="md-primary" ng-click="vm.showContractOverview()">
+                                        <i class="fa fa-arrow-left"></i> Back to overview
+                                    </md-button>
+                                    <contract contract="vm.contract"></contract>
+                                    <div>
+                                        <md-button class="md-primary md-raised" ng-click="vm.acceptContract()">Accept
+                                            contract
+                                        </md-button>
+                                    </div>
+                                </div>
+                                <div ng-if="vm.contractPage === vm.CONTRACT_PAGE_OVERVIEW">
+                                    <md-list>
+                                        <md-list-item class="md-2-line" ng-click="vm.showContractDetail(contract)"
+                                                      ng-repeat="contract in vm.contracts track by contract.contractId">
+                                            <div class="md-list-item-text">
+                                                <h3>
+                                                    <span ng-bind="contract.contractType || contract.contractId"></span>
+                                                </h3>
+                                                <p>Expires <span ng-bind="contract.expires | date"></span></p>
+                                            </div>
+                                            <md-button class="md-secondary md-primary"
+                                                       ng-click="vm.showAcknowledgeContract(contract)"> Acknowledge
+                                            </md-button>
+                                        </md-list-item>
+                                    </md-list>
+                                </div>
+                            </div>
+                        </md-tab-body>
+                    </md-tab>
 
                     <md-tab md-on-select="vm.tabSelected(vm.loadSettings)">
                         <md-tab-label><i class="fa fa-cog"></i>&nbsp;Settings</md-tab-label>

@@ -6,8 +6,16 @@ body {
 }
 
 h2 { font-weight: normal; font-size: 40px; text-align: center; padding: 0; color: #FFFFFF; }
-h3 { font-weight: normal; font-size: 16px; text-align: center; margin: 5px 0; padding: 0; z-index: 1; position: relative; }
 
+h3 { font-weight: normal; font-size: 16px; }
+
+h3.quotes {
+    text-align: center;
+    margin: 5px 0;
+    padding: 0;
+    z-index: 1;
+    position: relative;
+}
 h4 {
     font-weight: normal;
     margin: 5px 0;
@@ -420,4 +428,15 @@ ul.built { list-style: none; margin: 0 auto; width: 730px; }
 
 .list-item-secondary-button-padding p {
     padding-right: 120px;
+}
+
+.contract .error-text {
+    color: rgb(221, 44, 0);
+}
+
+.contract .clickable-img {
+    max-width: 200px;
+    max-height: 150px;
+    cursor: pointer;
+    outline: none;
 }

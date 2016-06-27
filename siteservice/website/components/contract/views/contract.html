@@ -1,0 +1,38 @@
+<div class="contract">
+    <h1>Acknowledge contract</h1>
+    <div ng-if="cvm.contract.type">
+        <p ng-bind="::cvm.contract.type"></p>
+    </div>
+    <div>
+        <p>The contract will expire on <span ng-bind="::cvm.contract.expires | date"></span>.</p>
+    </div>
+    <div ng-if="cvm.contract.content.mimeType.startsWith('text')">
+        <p ng-bind="::cvm.contract.content.content"></p>
+    </div>
+    <div ng-if="cvm.contract.content.mimeType.startsWith('image')">
+        <div ng-click="cvm.openImageInTab()" class="clickable-img">
+            <img class="clickable-img"
+                 ng-src="data:{{ ::cvm.contract.content.mimeType }};base64,{{ ::cvm.contract.content.content }}"/>
+        </div>
+    </div>
+    <div>
+        <h3 class="md-title">Involved parties</h3>
+        <ul>
+            <li ng-repeat="party in cvm.contract.parties track by party.name">
+                <span ng-bind="::cvm.getPartyLabel(party.type)"></span>: <span ng-bind="::party.name"></span>
+            </li>
+        </ul>
+    </div>
+    <div ng-if="cvm.contract.invalidates.length">
+        <h3 class="md-title">This contract invalidates the following contracts:</h3>
+        <ul>
+            <li ng-repeat="contractId in cvm.contract.invalidates track by $index" ng-bind="::contractId"></li>
+        </ul>
+    </div>
+    <div ng-if="cvm.contract.extends.length">
+        <h3 class="md-title">This contract extends the following contracts:</h3>
+        <ul>
+            <li ng-repeat="contractId in cvm.contract.extends track by $index" ng-bind="::contractId"></li>
+        </ul>
+    </div>
+</div>

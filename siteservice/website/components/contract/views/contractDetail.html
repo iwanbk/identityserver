@@ -1,0 +1,132 @@
+<form name="cvm.contractform" ng-submit="cvm.submit()" novalidate class="contract">
+    <h1>{{ cvm.isNew ? 'Create': 'Update' }} contract</h1>
+    <div layout="column">
+        <div>
+            <h3 class="md-title">Parties</h3>
+            <div ng-repeat="party in cvm.contract.parties" layout="column" layout-gt-sm="row">
+                <md-input-container>
+                    <label>Party type</label>
+                    <md-select name="party_type_{{ $index }}" ng-model="party.type" required style="min-width:200px;">
+                        <md-option ng-repeat="partyType in cvm.partyTypes track by partyType.type"
+                                   ng-value="partyType.type" ng-bind="partyType.label"></md-option>
+                    </md-select>
+                </md-input-container>
+                <md-input-container>
+                    <label>Name</label>
+                    <input name="party_name_{{ $index }}" ng-model="party.name" type="text" required ng-minlength="2">
+                    <div ng-messages="cvm.contractform['party_name_' + $index].$error">
+                        <div ng-message="minlength">minimum 2 characters are required</div>
+                        <div ng-message="required">This field is required</div>
+                    </div>
+                </md-input-container>
+                <div>
+                    <md-button class="md-warn" ng-click="cvm.removeParty(party)">
+                        <i class="fa fa-times"></i> remove
+                    </md-button>
+                </div>
+            </div>
+            <div>
+                <md-button ng-click="cvm.addParty()" class="md-primary">
+                    <i class="fa fa-plus"></i> Add another party
+                </md-button>
+            </div>
+        </div>
+        <div>
+            <h3 class="md-title">Contract type (optional)</h3>
+            <md-input-container>
+                <label>Contract type</label>
+                <input type="text" name="contractType" ng-model="cvm.contract.contractType" md-maxlength="40">
+                <div ng-messages="cvm.contractform.contractType.$error">
+                    <div ng-message="md-maxlength">Only 40 characters are allowed</div>
+                </div>
+            </md-input-container>
+        </div>
+        <div>
+            <h3 class="md-title">Invalidate contracts</h3>
+            <p>Does this contract invalidate any previous contracts? If so, enter them here.</p>
+            <md-chips ng-model="cvm.contract.invalidates" md-autocomplete-snap md-require-match="true"
+                      md-transform-chip="cvm.transformContractChip($chip)">
+                <md-autocomplete md-search-text="cvm.contractSearchTextInvalidates"
+                                 md-items="item in cvm.searchContract(cvm.contractSearchTextInvalidates)"
+                                 md-item-text="item.contractType|| item.contractId" placeholder="Search for a contract">
+                    <span md-highlight-text="cvm.contractSearchTextInvalidates">{{item.contractType || item.contractId}}</span>
+                </md-autocomplete>
+                <md-chip-template>
+                    <strong ng-bind="::cvm.getContractDisplayName($chip)"></strong>
+                </md-chip-template>
+            </md-chips>
+        </div>
+        <div>
+            <h3 class="md-title">Extend contracts</h3>
+            <p>Does this contract extend any existing contracts? If so, enter them here.</p>
+            <md-chips ng-model="cvm.contract.extends" md-autocomplete-snap md-require-match="true"
+                      md-transform-chip="cvm.transformContractChip($chip)">
+                <md-autocomplete md-search-text="cvm.contractSearchTextExisting"
+                                 md-items="item in cvm.searchContract(cvm.contractSearchTextExisting)"
+                                 md-item-text="item.contractType|| item.contractId" placeholder="Search for a contract">
+                    <span md-highlight-text="cvm.contractSearchTextExisting">{{item.contractType || item.contractId}}</span>
+                </md-autocomplete>
+                <md-chip-template>
+                    <strong ng-bind="::cvm.getContractDisplayName($chip)"></strong>
+                </md-chip-template>
+            </md-chips>
+        </div>
+        <md-divider></md-divider>
+        <div layout="column">
+            <h3 class="md-title">Expiry date</h3>
+            <md-datepicker name="expires" ng-model="cvm.contract.expires" md-placeholder="Expiry date"
+                           required></md-datepicker>
+            <div ng-messages="cvm.contractform.expires.$error" class="error-text">
+                <div ng-message="required">Expiry date is required</div>
+            </div>
+        </div>
+        <div>
+            <h3 class="md-title">Content</h3>
+            <div layout="row">
+                <md-input-container style="min-width:150px;">
+                    <label>Content type</label>
+                    <md-select name="contentType" ng-model="cvm.contractContentType" required>
+                        <md-option ng-repeat="type in cvm.contentTypes" ng-value="type.type"
+                                   ng-bind="type.label"></md-option>
+                    </md-select>
+                </md-input-container>
+            </div>
+            <md-input-container ng-if="cvm.contractContentType === 'text'" class="md-block">
+                <label>Contract text</label>
+                    <textarea ng-model="cvm.contractTextContent" type="text" name="contractContentText" rows="10"
+                              ng-required="cvm.contractContentType === 'text'">
+                    </textarea>
+                <div ng-messages="cvm.contractform.contractContentText.$error">
+                    <div ng-message="required">Contract text is required</div>
+                </div>
+            </md-input-container>
+            <div ng-if="cvm.contractContentType === 'image'" layout="row">
+                <div layout="column">
+                    <md-button class="md-raised md-primary" ng-click="cvm.clickFileUpload()"
+                               style="margin-bottom: 0;">
+                        &nbsp; <i class="fa fa-picture-o"></i> Choose image &nbsp;
+                    </md-button>
+                </div>
+                <input class="ng-hide" id="contractContentImage" type="file" accept="image/*"
+                       on-file-change="cvm.selectedFileChanged" required/>
+                <div ng-bind="cvm.fileError" class="error-text"></div>
+            </div>
+            <div ng-if="cvm.contractContentType === 'image' && cvm.contractImageContent">
+                <p>Click to open in a new tab</p>
+                <div ng-click="cvm.openImageInTab()" class="clickable-img">
+                    <img class="clickable-img"
+                         ng-src="data:{{ ::cvm.imageMimeType }};base64,{{ ::cvm.contractImageContent }}"/>
+                </div>
+            </div>
+        </div>
+    </div>
+    <p class="error-text" ng-bind="cvm.validationError"></p>
+    <div layout="row">
+        <md-button class="md-warn" type="button" ng-if="!cvm.isNew" ng-click="cvm.deleteContract()">
+            Delete contract
+        </md-button>
+        <md-button class="md-primary" type="submit" ng-disabled="!cvm.contractform.$valid">
+            {{ cvm.isNew ? 'Create contract' : 'Update contract' }}
+        </md-button>
+    </div>
+</form>

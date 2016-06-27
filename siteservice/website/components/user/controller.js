@@ -9,10 +9,11 @@
 
     UserHomeController.$inject = [
         '$q', '$rootScope', '$routeParams', '$location', '$window', '$mdToast', '$mdMedia', '$mdDialog',
-        'NotificationService', 'OrganizationService', 'UserService', 'UserDialogService'];
+        'NotificationService', 'OrganizationService', 'UserService', 'UserDialogService', 'ContractService'];
 
     function UserHomeController($q, $rootScope, $routeParams, $location, $window, $mdToast, $mdMedia, $mdDialog,
-                                NotificationService, OrganizationService, UserService, UserDialogService) {
+                                NotificationService, OrganizationService, UserService, UserDialogService,
+                                ContractService) {
         var vm = this;
         vm.username = $rootScope.user;
         vm.notifications = {
@@ -27,13 +28,21 @@
         var TAB_NOTIFICATIONS = 'notifications';
         var TAB_ORGANIZATIONS = 'organizations';
         var TAB_AUTHORIZATIONS = 'authorizations';
+        var TAB_CONTRACTS = 'contracts';
         var TAB_SETTINGS = 'settings';
-        var TABS = [TAB_YOU, TAB_NOTIFICATIONS, TAB_ORGANIZATIONS,TAB_AUTHORIZATIONS, TAB_SETTINGS];
+        var TABS = [TAB_YOU, TAB_NOTIFICATIONS, TAB_ORGANIZATIONS, TAB_AUTHORIZATIONS, TAB_CONTRACTS, TAB_SETTINGS];
+
+        vm.CONTRACT_PAGE_OVERVIEW = 'contract-overview';
+        vm.CONTRACT_PAGE_DETAIL = 'contract-detail';
+        vm.CONTRACT_PAGE_ACK = 'contract-ack';
+        vm.contractPage = vm.CONTRACT_PAGE_OVERVIEW;
 
         vm.owner = [];
         vm.member = [];
         vm.twoFAMethods = {};
         vm.user = {};
+        vm.contract = {};
+        vm.contracts = [];
 
         vm.loaded = {};
         vm.selectedTabIndex = 0;
@@ -71,11 +80,17 @@
         vm.createOrganization = UserDialogService.createOrganization;
         vm.showSetupAuthenticatorApplication = showSetupAuthenticatorApplication;
         vm.removeAuthenticatorApplication = removeAuthenticatorApplication;
+        vm.loadContracts = loadContracts;
+        vm.showContractOverview = showContractOverview;
+        vm.showContractDetail = showContractDetail;
+        vm.showAcknowledgeContract = showAcknowledgeContract;
+        vm.acceptContract = acceptContract;
+
         init();
 
         function init() {
             var index = TABS.indexOf($routeParams.tab);
-            vm.selectedTabIndex = index !== -1 ? index: 0;
+            vm.selectedTabIndex = index !== -1 ? index : 0;
             loadUser()
                 .then(function () {
                     loadVerifiedPhones();
@@ -87,11 +102,11 @@
         }
 
         function tabSelected(fx) {
-            if(fx) {
+            if (fx) {
                 fx();
             }
             var path = '/home/' + TABS[vm.selectedTabIndex];
-            if(path !== $window.location.hash.replace('#', '')){
+            if (path !== $window.location.hash.replace('#', '')) {
                 $location.path(path, false);
             }
         }
@@ -249,7 +264,7 @@
         function checkSelected() {
             var selected = false;
 
-            vm.notifications.invitations.forEach(function(invitation) {
+            vm.notifications.invitations.forEach(function (invitation) {
                 if (invitation.selected === true) {
                     selected = true;
                 }
@@ -261,7 +276,7 @@
         function accept() {
             var requests = [];
 
-            vm.notifications.invitations.forEach(function(invitation) {
+            vm.notifications.invitations.forEach(function (invitation) {
                 if (invitation.selected === true) {
                     requests.push(NotificationService.accept(invitation));
                 }
@@ -270,12 +285,12 @@
             $q
                 .all(requests)
                 .then(
-                    function(responses) {
+                    function (responses) {
                         toast('Accepted ' + responses.length + ' invitations!');
                         vm.loaded.notifications = false;
                         loadNotifications();
                     },
-                    function(reason) {
+                    function (reason) {
                         $window.location.href = "error" + reason.status;
                     }
                 );
@@ -284,7 +299,7 @@
         function reject() {
             var requests = [];
 
-            vm.notifications.invitations.forEach(function(invitation) {
+            vm.notifications.invitations.forEach(function (invitation) {
                 if (invitation.selected === true) {
                     requests.push(NotificationService.reject(invitation));
                 }
@@ -293,12 +308,12 @@
             $q
                 .all(requests)
                 .then(
-                    function(responses) {
+                    function (responses) {
                         toast('Rejected ' + responses.length + ' invitations!');
                         vm.loaded.notifications = false;
                         loadNotifications();
                     },
-                    function(reason) {
+                    function (reason) {
                         $window.location.href = "error" + reason.status;
                     }
                 );
@@ -704,6 +719,37 @@
                     });
             });
         }
-    }
 
+        function loadContracts() {
+            ContractService
+                .list('user', vm.user.username)
+                .then(function (response) {
+                    vm.contracts = response.data;
+                });
+        }
+
+        function showContractOverview() {
+            vm.contractPage = vm.CONTRACT_PAGE_OVERVIEW;
+        }
+
+        function showContractDetail(contract) {
+            vm.contractPage = vm.CONTRACT_PAGE_DETAIL;
+            vm.contract = contract;
+        }
+
+        function showAcknowledgeContract(contract) {
+            vm.contractPage = vm.CONTRACT_PAGE_ACK;
+            vm.contract = contract;
+        }
+
+
+        function acceptContract() {
+            ContractService.signContract(vm.contract.contractId, $rootScope.user)
+                .then(function () {
+                    vm.contractPage = vm.CONTRACT_PAGE_OVERVIEW;
+                }, function (response) {
+                    $window.location.href = 'error' + response.status;
+                });
+        }
+    }
 })();
